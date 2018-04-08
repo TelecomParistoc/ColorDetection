@@ -1,93 +1,89 @@
-//This code read a color permanently and output the read color on digital pins 3 and 4 
- 
-// Include the Bricktronics Button and ColorSensor libraries
-#include <BricktronicsColor.h>
- 
- 
-// This example can be run in three different ways. Pick one, and un-comment
-// the code lines corresponding to your chosen method. Comment-out the lines
-// for the other methods that you aren't using.
- 
-// 1. With a Bricktronics Shield - Include these lines and be sure to
-// call BricktronicsShield::begin() in the setup() function below.
-// You also need to install the Adafruit MCP23017 library:
-//  https://github.com/adafruit/Adafruit-MCP23017-Arduino-Library
-// Select the sensor port for the ColorSensor (SENSOR_3 or SENSOR_4) in their constructors below.
-// connect only pins 3-4 for the color sensor.
+#include <Wire.h>
+
+// Bricktronics Example: ColorButtonBricktronicsShield
+// http://www.wayneandlayne.com/bricktronics
 //
-// Config 1 - arduino:avr:uno
-//#include <Wire.h>
-//#include <Adafruit_MCP23017.h>
+// When the button is pressed, a single reading from the color sensor is taken
+// and converted into a color name and printed over the Serial Console.
+//
+// Hardware used:
+// * Wayne and Layne Bricktronics Shield
+//   https://store.wayneandlayne.com/products/bricktronics-shield-kit.html
+// * LEGO NXT Pushbutton Sensor
+// * LEGO NXT Color Sensor
+//
+// Software libraries used:
+// * Wayne and Layne BricktronicsShield library
+//   https://github.com/wayneandlayne/BricktronicsShield
+// * Wayne and Layne BricktronicsButton library
+//   https://github.com/wayneandlayne/BricktronicsButton
+// * Wayne and Layne BricktronicsColor library
+//   https://github.com/wayneandlayne/BricktronicsColor
+//
+// Written in 2016 by Matthew Beckler and Adam Wolf for Wayne and Layne, LLC
+// To the extent possible under law, the author(s) have dedicated all
+//   copyright and related and neighboring rights to this software to the
+//   public domain worldwide. This software is distributed without any warranty.
+// You should have received a copy of the CC0 Public Domain Dedication along
+//   with this software. If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
+
+
+// Include the Bricktronics libraries
 #include <BricktronicsShield.h>
+#include <BricktronicsColor.h>
+
+
+// Select the sensor ports for the Button (SENSOR_1 through SENSOR_4)
+// and ColorSensor (SENSOR_3 or SENSOR_4) in their constructors below.
+// If your chosen port has jumpers (ports 3 and 4), connect pins 2-3 and
+// 4-5 for the button, and connect only pins 3-4 for the color sensor.
 BricktronicsColor c(BricktronicsShield::SENSOR_3);
-// Config end
- 
-// 2. With a Bricktronics Megashield - Include these lines but do not
-// call BricktronicsShield::begin() in the setup() function below.
-// Select the sensor ports for the button (SENSOR_1 through SENSOR_4)
-// and color sensor (SENSOR_1 through SENSOR_4) in their constructors below.
-// If your chosen port has jumpers, connect pins 2-3 and 4-5 for the button,
-// and connect only pins 3-4 for the color sensor.
-//
-// Config 2 - arduino:avr:mega:cpu=atmega2560
-//#include <BricktronicsMegashield.h>
-//BricktronicsButton b(BricktronicsMegashield::SENSOR_1);
-//BricktronicsColor c(BricktronicsMegashield::SENSOR_3);
-// Config end
- 
-// 3. With two Bricktronics Breakout boards - No additional includes needed, just
-// update the pin assignments in the button and color sensor constructors below.
-//
-// For the color sensor, connect these pins on the Bricktronics Breakout board:
-//  Pin 1 - Unused
-//  Pin 2 - Connect to Ground
-//  Pin 3 - Connect to Ground
-//  Pin 4 - Connect to 5V
-//  Pin 5 - Connect to any digital pin
-//  Pin 6 - Connect to any analog input pin
-//
-// The BricktronicsColor() arguments are: clockPin, dataPin
-// clockPin is where the breakout board's pin 5 is connected
-// dataPin is where the breakout board's pin 6 is connected
-//    This must be an analog pin.
 
-const int ledPinYellow = 3;
-const int ledPinBlue = 4;
 
-//time beetween two different color measures
-const int period = 500; //milliseconds
+/* ============================================= CONSTANTES ================================ */
 
- 
-void setup() 
+//make sure nothing is connected to motor port 2 ! (otherwise there is a conflict with the pins below) 
+int RED_PIN = 3;
+int GREEN_PIN = 4;
+
+
+void setup()
 {
   // Be sure to set your serial console to 115200 baud
   Serial.begin(115200);
- 
-  // Only call this if you are using a Bricktronics Shield,
-  // otherwise leave it commented-out.
-  // Config 1 - arduino:avr:uno
+
+  // Initialize the Bricktronics Shield
   BricktronicsShield::begin();
-  // Config end
- 
+
   // Initialize the button and color sensor connections
   c.begin();
 }
- 
- 
+
+
 void loop()
 {
+  // this delay is mandatory ! we don't really know why... 
+  delay(300);
   
   int readColor = c.getColor();
-
-  //Serial.println("ok");
-  //c.printColor(readColor);
+  c.printColor(readColor);
+  Serial.println();
   
-  if (readColor == COLOR_YELLOW) digitalWrite(ledPinYellow, HIGH);
-  else digitalWrite(ledPinYellow, LOW);
+  if (readColor == COLOR_RED) {
+    digitalWrite(RED_PIN, HIGH);
+    digitalWrite(GREEN_PIN, LOW);
+  }
+  // there is sometimes a confusion between YELLOW and GREEN
+  // but never between RED and YELLOW
+  else if (readColor == COLOR_YELLOW || readColor == COLOR_GREEN) {
+    digitalWrite(RED_PIN, LOW);
+    digitalWrite(GREEN_PIN, HIGH);
+  }
+  else {
+    digitalWrite(RED_PIN, LOW);
+    digitalWrite(GREEN_PIN, LOW);
+  }
 
-  if (readColor == COLOR_BLUE) digitalWrite(ledPinBlue, HIGH);
-  else digitalWrite(ledPinBlue, LOW);
- 
-  //we wait a little bit here
-  delay(period);
+  delay(300);
 }
+
